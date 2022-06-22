@@ -24,6 +24,7 @@ class Game:
 		self.snake.draw()
 		self.apple.draw()
 		self.rack.draw()
+		self.snake.bullet.draw()
 		pg.display.update()
 
 	def restart(self):
@@ -49,6 +50,22 @@ class Rack:
 
 	def replace(self):
 		self.position = [random.randint(0, game.map_width-1), random.randint(0, game.map_height-1)]
+
+
+class Bullet:
+	def __init__(self, color, pos, direction, speed, radius):
+		self.color = color
+		self.pos = pos
+		self.direction = direction
+		self.speed = speed
+		self.radius = radius
+
+	def move(self):
+		self.pos[0] += self.direction[0]*self.speed
+		self.pos[1] += self.direction[1]*self.speed
+
+	def draw(self):
+		pg.draw.circle(game.window, self.color, self.pos, self.radius)
 
 
 class Apple:
@@ -87,6 +104,7 @@ class Snake:
 		self.body = [[1, 1]]
 		self.direction = 1, 0
 		self.size = 50  # game.cell_size
+		self.bullet = Bullet(self.color, [-100, -100], [0, 0], 1, self.size//10)
 
 	def move(self):
 		self.body[0][0] += self.direction[0]
@@ -122,6 +140,12 @@ class Snake:
 		if key[pg.K_d]:
 			self.direction = 1, 0
 
+	def shoot(self):
+		key = pg.key.get_pressed()
+		if key[pg.K_SPACE]:
+			self.bullet = Bullet(self.color, [self.body[0][0]*game.cell_size, self.body[0][1]*game.cell_size],
+								self.direction, 5, self.size//10)
+
 	def draw(self):
 		for block in self.body:
 			pg.draw.rect(game.window, self.color, (block[0]*game.cell_size, block[1]*game.cell_size, self.size,
@@ -141,7 +165,9 @@ def main():
 
 		if count % (game.fps - game.speed) == 0:
 			game.move_all()
-			game.draw_all()
+		game.snake.bullet.move()
+
+		game.draw_all()
 
 		for event in pg.event.get():
 			if event.type == pg.QUIT:
@@ -149,6 +175,7 @@ def main():
 				exit()
 			elif event.type == pg.KEYDOWN:
 				game.snake.change_direction()
+				game.snake.shoot()
 
 
 main()
